@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Groups</h2>
+<ul>
+    {% for group in user_groups %}
+    <li>{{ group }}</li>
+    {% endfor %}
+</ul>
+
+<h2>Roles</h2>
+<ul>
+    {% for role in user_roles %}
+    <li>{{ role }}</li>
+    {% endfor %}
+</ul>
+
+<h2>S3</h2>
+{{ s3_bucket }}:
+<ul>
+    {% for file in s3_bucket_content %}
+    <li>{{ file }}</li>
+    {% endfor %}
+</ul>
+
+
+{% endblock %}

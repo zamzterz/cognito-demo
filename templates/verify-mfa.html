@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify MFA{% endblock %}
+
+{% block content %}
+<div>
+    To configure MFA for your account, please scan the QR code below using your authenticator app
+
+    <div id="qrcode"></div>
+    <script type="text/javascript">
+        new QRCode(document.getElementById("qrcode"), "{{ qr_uri }}");
+    </script>
+
+    or manually enter the following code: {{ secret }}
+</div>
+
+<form method="POST">
+    <label for="code">Enter generated code:</label>
+    <input id="code" name="code" maxlength="6" minlength="6">
+    <button type="submit">Submit</button>
+</form>
+
+{% endblock %}
