@@ -10,11 +10,14 @@
 </ul>
 
 <h2>Roles</h2>
-<ul>
-    {% for role in user_roles %}
-    <li>{{ role }}</li>
-    {% endfor %}
-</ul>
+<form method="POST" action="/switch-role">
+    <select name="role" onchange="this.form.submit()">
+        <option value="">--no role--</option>
+        {% for role in user_roles %}
+        <option value="{{ role }}">{{ role }}</option>
+        {% endfor %}
+    </select>
+</form>
 
 <h2>S3</h2>
 {{ s3_bucket }}:
