@@ -36,8 +36,8 @@ To be able to login with your chosen username, you must also set a password for 
 $ aws cognito-idp admin-set-user-password --no-permanent --user-pool-id <value> --username <username> --password <value> 
 ```
 
-## Running the app
-The app is a simple Flask app which will list the contents of a preconfigured S3 bucket which the authenticated user
+## Running the web app
+The web app is a simple Flask app which will list the contents of a preconfigured S3 bucket which the authenticated user
 will gain access to by
 [obtaining temporary AWS credentials](https://docs.aws.amazon.com/cognito/latest/developerguide/iam-roles.html)
 associated with an IAM role from an Cognito Identity pool.
@@ -52,3 +52,11 @@ After that, visit http://localhost:5000 and login using the username and passwor
 It will ask you to configure TOTP MFA during the first login, so make sure to have an authenticator app.
 
 Try uploading some content to the S3 bucket and refresh the page to view it! 🎉
+
+## Using the CLI app
+The CLI is a simple script fetching that accepts username and password directly and uses them to obtain tokens from
+Cognito. Run it with:
+```console
+$ python cli.py <client id> <username>
+```
+and enter the password and MFA code (if configured for the user) when prompted.
