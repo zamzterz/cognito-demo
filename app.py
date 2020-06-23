@@ -60,6 +60,7 @@ def index():
         'index.html',
         user_groups=user_session.id_token['cognito:groups'],
         user_roles=user_session.id_token['cognito:roles'],
+        current_role=flask.session.get('aws-role'),
         s3_bucket=app.config['S3_BUCKET_NAME'],
         s3_bucket_content=bucket_content
     )
