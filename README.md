@@ -45,7 +45,7 @@ associated with an IAM role from an Cognito Identity pool.
 To run it, install the dependencies and update `settings.cfg` with your configuration. Then start the server:
 ```console
 $ pipenv install
-$ COGNITO_DEMO_SETTINGS=settings.cfg app.py
+$ COGNITO_DEMO_SETTINGS=settings.cfg python app.py
 ``` 
 
 After that, visit http://localhost:5000 and login using the username and password you have configured.
