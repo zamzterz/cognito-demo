@@ -1,30 +1,37 @@
+import argparse
 import json
 import sys
 from getpass import getpass
 
 import boto3
+from qrcode import QRCode
 
 cognito_client = boto3.client('cognito-idp')
 
 
-def authenticate():
+def auth_req(client_id, username, password):
+    return cognito_client.initiate_auth(
+        AuthFlow='USER_PASSWORD_AUTH',
+        AuthParameters={'USERNAME': username, 'PASSWORD': password},
+        ClientId=client_id
+    )
+
+
+def authenticate(client_id, username):
     response = None
+    password = None
     while not response:
         try:
             password = getpass()
-            response = cognito_client.initiate_auth(
-                AuthFlow='USER_PASSWORD_AUTH',
-                AuthParameters={'USERNAME': username, 'PASSWORD': password},
-                ClientId=client_id,
-            )
+            response = auth_req(client_id, username, password)
         except cognito_client.exceptions.NotAuthorizedException:
             print('Incorrect password, please try again.')
             pass
 
-    return response
+    return response, password
 
 
-def second_factor_auth(challenge_name, session):
+def second_factor_auth(client_id, username, challenge_name, session):
     response = None
     while not response:
         try:
@@ -41,7 +48,47 @@ def second_factor_auth(challenge_name, session):
             print('Incorrect code, please try again.')
             pass
 
+    cognito_client.set_user_mfa_preference(
+        SoftwareTokenMfaSettings={
+            'Enabled': True,
+            'PreferredMfa': True
+        },
+        AccessToken=response['AuthenticationResult']['AccessToken']
+    )
+
     return response
+
+
+def totp_setup(session, client_id, username, password):
+    response = cognito_client.associate_software_token(Session=session)
+    secret = response['SecretCode']
+    qr_uri = f'otpauth://totp/Cognito:{username}?secret={secret}&issuer=Cognito'
+    qr = QRCode()
+    qr.add_data(qr_uri)
+    qr.make(fit=True)
+    qr.print_ascii()
+
+    user_code = input('Scan the QR code, then input the TOTP: ')
+    response = cognito_client.verify_software_token(
+        Session=response['Session'],
+        UserCode=user_code
+    )
+
+    if response['Status'] != 'SUCCESS':
+        print(f'Failed to verify MFA: {json.dumps(auth_response)}')
+        sys.exit(1)
+
+    token_response = auth_req(client_id, username, password)
+
+    cognito_client.set_user_mfa_preference(
+        SoftwareTokenMfaSettings={
+            'Enabled': True,
+            'PreferredMfa': True
+        },
+        AccessToken=token_response['AuthenticationResult']['AccessToken']
+    )
+
+    return token_response
 
 
 def print_auth_result(response):
@@ -49,18 +96,19 @@ def print_auth_result(response):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print('Usage: python cli.py <client id> <username>')
-        sys.exit(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('client_id', type=str)
+    parser.add_argument('username', type=str)
+    args = parser.parse_args()
 
-    client_id = sys.argv[1]
-    username = sys.argv[2]
-
-    auth_response = authenticate()
+    auth_response, password = authenticate(args.client_id, args.username)
 
     challenge_name = auth_response.get('ChallengeName')
     if challenge_name in ['SOFTWARE_TOKEN_MFA', 'SMS_MFA']:
-        token_response = second_factor_auth(challenge_name, auth_response['Session'])
+        token_response = second_factor_auth(args.client_id, args.username, challenge_name, auth_response['Session'])
+        print_auth_result(token_response)
+    elif challenge_name == 'MFA_SETUP':
+        token_response = totp_setup(auth_response['Session'], args.client_id, args.username, password)
         print_auth_result(token_response)
     elif 'AuthenticationResult' in auth_response:
         print_auth_result(auth_response)

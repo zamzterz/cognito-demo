@@ -9,6 +9,7 @@ verify_ssl = true
 flask = "*"
 flask-pyoidc = "*"
 boto3 = "*"
+qrcode = "*"
 
 [requires]
 python_version = "3.7"

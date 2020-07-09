@@ -54,9 +54,9 @@ It will ask you to configure TOTP MFA during the first login, so make sure to ha
 Try uploading some content to the S3 bucket and refresh the page to view it! 🎉
 
 ## Using the CLI app
-The CLI is a simple script fetching that accepts username and password directly and uses them to obtain tokens from
+The CLI is a simple script that accepts username and password directly and uses them to obtain tokens from
 Cognito. Run it with:
 ```console
 $ python cli.py <client id> <username>
 ```
-and enter the password and MFA code (if configured for the user) when prompted.
+and enter the password and configure/confirm MFA code when prompted.
