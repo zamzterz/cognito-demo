@@ -27,8 +27,37 @@ def authenticate(client_id, username):
         except cognito_client.exceptions.NotAuthorizedException:
             print('Incorrect password, please try again.')
             pass
+        except cognito_client.exceptions.PasswordResetRequiredException:
+            print('You need to reset your password.')
+            password = forgot_password_flow(client_id, username)
+            response = auth_req(client_id, username, password)
 
     return response, password
+
+
+def forgot_password_flow(client_id, username):
+    response = cognito_client.forgot_password(
+        ClientId=client_id,
+        Username=username
+    )
+    print(json.dumps(response['CodeDeliveryDetails']))
+    confirmation_code = input('Enter the confirmation code: ')
+
+    password_ok = False
+    while not password_ok:
+        new_password = getpass('Enter new password: ')
+        confirmed_password = getpass('Confirm new password: ')
+        if new_password == confirmed_password:
+            password_ok = True
+
+    cognito_client.confirm_forgot_password(
+        ClientId=client_id,
+        Username=username,
+        ConfirmationCode=confirmation_code,
+        Password=confirmed_password
+    )
+    print('Password successfully changed')
+    return confirmed_password
 
 
 def second_factor_auth(client_id, username, challenge_name, session):
